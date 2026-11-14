@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import MainMenu from './scenes/MainMenu'; // Додаємо імпорт
 import MainBase from './scenes/MainBase';
-import BuildingInside from './scenes/BuildingInside';
+import BuildingInside from './scenes/LandingModule';
 
 const config = {
     type: Phaser.AUTO,
