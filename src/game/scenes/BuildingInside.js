@@ -23,8 +23,6 @@ export default class BuildingInside extends Phaser.Scene {
         
         const terminalGridX = roomX + 7;
         const terminalGridY = roomY + 1;
-        
-        // ВИПРАВЛЕНО: Двері тепер на одну клітинку нижче сірої підлоги
         const exitGridX = roomX + 7;
         const exitGridY = roomY + roomHeight; 
 
@@ -38,8 +36,6 @@ export default class BuildingInside extends Phaser.Scene {
                 }
                 
                 if (x === terminalGridX && y === terminalGridY) isWalkable = 1;
-                
-                // Оскільки двері тепер за межами підлоги (де isWalkable = 1), ми примусово робимо їх прохідними
                 if (x === exitGridX && y === exitGridY) isWalkable = 0;
 
                 row.push(isWalkable);
@@ -47,6 +43,8 @@ export default class BuildingInside extends Phaser.Scene {
             grid.push(row);
         }
 
+        // ЗБЕРІГАЄМО СІТКУ В КЛАСІ ДЛЯ ПОШУКУ НАЙБЛИЖЧОЇ ТОЧКИ
+        this.grid = grid;
         this.finder.setGrid(grid);
         this.finder.setAcceptableTiles([0]);
 
@@ -63,8 +61,11 @@ export default class BuildingInside extends Phaser.Scene {
 
         this.terminal.on('pointerdown', (pointer, localX, localY, event) => {
             event.stopPropagation();
-            this.walkTo(pointer.worldX, pointer.worldY, () => {
-                console.log("Відкрито панель управління!");
+            const interactPixelX = terminalGridX * this.tileSize;
+            const interactPixelY = (terminalGridY + 1) * this.tileSize; 
+
+            this.walkTo(interactPixelX, interactPixelY, () => {
+                window.dispatchEvent(new CustomEvent('OPEN_TERMINAL'));
             });
         });
 
@@ -78,7 +79,6 @@ export default class BuildingInside extends Phaser.Scene {
             });
         });
 
-        // Гравець автоматично стає на краю підлоги (exitGridY - 1)
         const spawnGridX = exitGridX;
         const spawnGridY = exitGridY - 1;
 
@@ -98,16 +98,65 @@ export default class BuildingInside extends Phaser.Scene {
         });
     }
 
+    // НОВИЙ МЕТОД: Шукає найближчу вільну клітинку по спіралі (радіусу)
+    findClosestWalkable(targetX, targetY) {
+        const maxRadius = 20; 
+        let closestTile = null;
+        let minDistance = Infinity;
+
+        for (let r = 1; r <= maxRadius; r++) {
+            for (let dx = -r; dx <= r; dx++) {
+                for (let dy = -r; dy <= r; dy++) {
+                    if (Math.abs(dx) === r || Math.abs(dy) === r) {
+                        let checkX = targetX + dx;
+                        let checkY = targetY + dy;
+                        
+                        // Перевіряємо, чи не вийшли за межі карти
+                        if (checkY >= 0 && checkY < this.grid.length && checkX >= 0 && checkX < this.grid[0].length) {
+                            if (this.grid[checkY][checkX] === 0) { 
+                                let dist = Phaser.Math.Distance.Between(targetX, targetY, checkX, checkY);
+                                if (dist < minDistance) {
+                                    minDistance = dist;
+                                    closestTile = { x: checkX, y: checkY };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (closestTile) return closestTile; // Знайшли найближчу - віддаємо
+        }
+        return null; 
+    }
+
     walkTo(targetPixelX, targetPixelY, onArrivalAction = null) {
-        const toGridX = Math.floor(targetPixelX / this.tileSize);
-        const toGridY = Math.floor(targetPixelY / this.tileSize);
+        let toGridX = Math.floor(targetPixelX / this.tileSize);
+        let toGridY = Math.floor(targetPixelY / this.tileSize);
+
+        // Обмежуємо клік краями карти
+        toGridX = Phaser.Math.Clamp(toGridX, 0, this.grid[0].length - 1);
+        toGridY = Phaser.Math.Clamp(toGridY, 0, this.grid.length - 1);
+
+        // ЯКЩО КЛІКНУЛИ НА СТІНУ - ШУКАЄМО НАЙБЛИЖЧУ ДОСТУПНУ ТОЧКУ
+        if (this.grid[toGridY][toGridX] !== 0) {
+            const nearest = this.findClosestWalkable(toGridX, toGridY);
+            if (nearest) {
+                toGridX = nearest.x;
+                toGridY = nearest.y;
+                // Коригуємо ціль, щоб персонаж ішов у центр знайденої клітинки
+                targetPixelX = toGridX * this.tileSize + 16;
+                targetPixelY = toGridY * this.tileSize + 16;
+            } else {
+                return; // Якщо всюди стіни, просто ігноруємо
+            }
+        }
 
         const fromGridX = Math.floor(this.player.x / this.tileSize);
         const fromGridY = Math.floor(this.player.y / this.tileSize);
 
         this.finder.findPath(fromGridX, fromGridY, toGridX, toGridY, (path) => {
             if (path === null) {
-                console.warn("Стіна! Туди не можна.");
+                console.warn("Шлях заблоковано!");
             } else {
                 this.currentPath = path.map(p => new Phaser.Math.Vector2(p.x * this.tileSize, p.y * this.tileSize));
                 

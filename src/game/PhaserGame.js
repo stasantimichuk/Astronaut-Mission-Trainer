@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import MainMenu from './scenes/MainMenu'; // Додаємо імпорт
 import MainBase from './scenes/MainBase';
 import BuildingInside from './scenes/BuildingInside';
 
@@ -14,7 +15,9 @@ const config = {
         default: 'arcade',
         arcade: { debug: false }
     },
-    scene: [MainBase, BuildingInside]
+    audio: { noAudio: true },
+    pixelArt: true, // ВАЖЛИВО: Робить графіку чіткою (піксельною)
+    scene: [MainMenu, MainBase, BuildingInside]
 };
 
 export default config;
