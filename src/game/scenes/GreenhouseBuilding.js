@@ -9,6 +9,9 @@ export default class GreenhouseBuilding extends Phaser.Scene {
     }
 
     preload() {
+
+        this.load.setBaseURL(import.meta.env.BASE_URL);
+
         if (!this.textures.exists('greenhouseIntTexture')) {
             this.load.image('greenhouseIntTexture', 'assets/sprites/greenhouse_int.png');
         }
