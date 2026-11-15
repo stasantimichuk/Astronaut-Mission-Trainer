@@ -6,6 +6,7 @@ export default class LandingModule extends Phaser.Scene {
     constructor() {
         super('LandingModule');
         this.tileSize = 32;
+        
     }
 
     create() {
@@ -133,9 +134,9 @@ export default class LandingModule extends Phaser.Scene {
                     
                     // Спавн рівно під дверима зовнішньої бази
                     state[idx].x = 48 * 32; 
-                    state[idx].y = 52 * 32; 
+                    state[idx].y = 72 * 32; // Було 52 * 32, обов'язково зміни на 72
                     this.registry.set('crewState', state);
-
+                    
                     window.dispatchEvent(new CustomEvent('UPDATE_ASTRO_LOCATION', { detail: { id: this.activeAstroId, location: 'MainBase' } }));
                     this.scene.start('MainBase', { activeId: this.activeAstroId }); 
                 });

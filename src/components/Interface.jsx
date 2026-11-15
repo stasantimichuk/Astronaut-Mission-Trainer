@@ -18,7 +18,8 @@ const GREENHOUSE = {
 const CONNECTED_BUILDINGS = ['LandingModule', 'WaterProcessingBuilding', 'Greenhouse'];
 
 export default function Interface() {
-    const [gameState, setGameState] = useState('menu');
+    //const [gameState, setGameState] = useState('menu');
+    const [gameState, setGameState] = useState('playing');
     const [showMenuButtons, setShowMenuButtons] = useState(false);
     const [day, setDay] = useState(1);
     const [gameTime, setGameTime] = useState(480); // 08:00
