@@ -32,6 +32,9 @@ export default class MainBase extends Phaser.Scene {
                 this.load.image(`astro_${i}_walk2`, `/assets/sprites/astro_${i}_walk2.png`);
             }
         }
+        if (!this.textures.exists('mapTexture')) {
+            this.load.image('mapTexture', '/assets/sprites/background.png');
+        }
     }
 
     create() {
@@ -98,6 +101,21 @@ export default class MainBase extends Phaser.Scene {
 
         this.add.grid(mapWidthPx / 2, mapHeightPx / 2, mapWidthPx, mapHeightPx, ts, ts, 0x222222, 1, 0x333333, 1);
         this.add.rectangle(0, 0, mapWidthPx, spaceEndY * ts, 0x000000).setOrigin(0, 0);
+
+        const surfaceY = spaceEndY * ts;
+        const surfaceHeight = (mapHeightTiles - spaceEndY) * ts;
+
+        if (this.textures.exists('mapTexture')) {
+            this.add.image(0, surfaceY, 'mapTexture')
+                .setOrigin(0, 0)
+                .setDisplaySize(mapWidthPx, surfaceHeight)
+                .setDepth(0);
+        } else {
+            this.add.rectangle(0, surfaceY, mapWidthPx, surfaceHeight, 0x666666)
+                .setOrigin(0, 0)
+                .setDepth(0);
+        }
+
 
         for (let i = 1; i <= 4; i++) {
             if (!this.anims.exists(`walk_${i}`)) {
