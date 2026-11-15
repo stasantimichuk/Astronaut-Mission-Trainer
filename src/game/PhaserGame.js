@@ -19,7 +19,7 @@ const config = {
     },
     audio: { noAudio: true },
     pixelArt: true, // ВАЖЛИВО: Робить графіку чіткою (піксельною)
-    scene: [MainMenu, MainBase, LandingModule, WaterProcessingBuilding, GreenhouseBuilding]
+    scene: [MainBase, MainMenu, LandingModule, WaterProcessingBuilding, GreenhouseBuilding]
 };
 
 export default config;

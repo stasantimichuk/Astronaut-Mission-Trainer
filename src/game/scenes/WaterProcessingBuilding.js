@@ -10,7 +10,7 @@ export default class WaterProcessingBuilding extends BuildingScene {
             wallColor: 0x1e293b,
             title: 'H2O & O2 PROCESSING FACILITY',
             titleColor: '#3b82f6',
-            returnTile: { x: 38, y: 51 } // під дверима лабораторії на поверхні
+            returnTile: { x: 38, y: 71 }
         });
     }
 
