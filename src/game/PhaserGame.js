@@ -22,4 +22,4 @@ const config = {
     scene: [MainMenu, MainBase, LandingModule, WaterProcessingBuilding, GreenhouseBuilding]
 };
 
-export default config;
+export default config;
