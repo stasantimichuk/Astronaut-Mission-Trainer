@@ -14,8 +14,12 @@ export default class MainBase extends Phaser.Scene {
     }
 
     preload() {
-        // Змінна 'b' автоматично підставить '/' локально і '/Astronaut-Mission-Trainer/' на GitHub
-        const b = import.meta.env.BASE_URL; 
+        const b = import.meta.env.BASE_URL;
+
+        // Завантажуємо фон
+        if (!this.textures.exists('backgroundTexture')) {
+            this.load.image('backgroundTexture', b + 'assets/sprites/background.png');
+        }
 
         if (!this.textures.exists('mainBaseTexture')) {
             this.load.image('mainBaseTexture', b + 'assets/sprites/mainModuleBase.png');
@@ -109,17 +113,13 @@ export default class MainBase extends Phaser.Scene {
         const surfaceY = spaceEndY * ts;
         const surfaceHeight = (mapHeightTiles - spaceEndY) * ts;
 
-        if (this.textures.exists('mapTexture')) {
-            this.add.image(0, surfaceY, 'mapTexture')
+        // Відмальовуємо місячний фон ТІЛЬКИ на рівні землі
+        if (this.textures.exists('backgroundTexture')) {
+            this.add.image(0, spaceEndY * ts, 'backgroundTexture') // Починаємо малювати нижче космосу
                 .setOrigin(0, 0)
-                .setDisplaySize(mapWidthPx, surfaceHeight)
-                .setDepth(0);
-        } else {
-            this.add.rectangle(0, surfaceY, mapWidthPx, surfaceHeight, 0x666666)
-                .setOrigin(0, 0)
+                .setDisplaySize(mapWidthPx, mapHeightPx - (spaceEndY * ts)) // Висота тільки для поверхні
                 .setDepth(0);
         }
-
 
         for (let i = 1; i <= 4; i++) {
             if (!this.anims.exists(`walk_${i}`)) {
