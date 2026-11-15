@@ -10,14 +10,14 @@ export default class GreenhouseBuilding extends Phaser.Scene {
 
     preload() {
         if (!this.textures.exists('greenhouseIntTexture')) {
-            this.load.image('greenhouseIntTexture', '/assets/sprites/greenhouse_int.png');
+            this.load.image('greenhouseIntTexture', 'assets/sprites/greenhouse_int.png');
         }
         // ВИПРАВЛЕНО: завантажуємо текстури астронавтів, щоб сцена не крашилась при оновленні
         if (!this.textures.exists('astro_1_stand')) {
             for (let i = 1; i <= 4; i++) {
-                this.load.image(`astro_${i}_stand`, `/assets/sprites/astro_${i}_stand.png`);
-                this.load.image(`astro_${i}_walk1`, `/assets/sprites/astro_${i}_walk1.png`);
-                this.load.image(`astro_${i}_walk2`, `/assets/sprites/astro_${i}_walk2.png`);
+                this.load.image(`astro_${i}_stand`, `assets/sprites/astro_${i}_stand.png`);
+                this.load.image(`astro_${i}_walk1`, `assets/sprites/astro_${i}_walk1.png`);
+                this.load.image(`astro_${i}_walk2`, `assets/sprites/astro_${i}_walk2.png`);
             }
         }
     }
