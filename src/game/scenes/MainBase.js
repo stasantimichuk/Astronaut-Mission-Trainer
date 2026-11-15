@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import EasyStar from 'easystarjs';
 import Astronaut from '../entities/Astronaut';
-import { deliverRegolith } from '../utils/deliverRegolith';
+import { startWork, cancelWork, updateWork, WORK_DURATION } from '../utils/work';
+import { carveLandingPad, createLandingPad, updateLandingPad, canEnterWithParcel, getCarrySlowdown } from '../locations/LandingPad';
 
 const SOLAR_CLEAN_COLOR = 0xffd700;
 const SOLAR_DIRTY_COLOR = 0x705d42;
@@ -13,30 +14,27 @@ export default class MainBase extends Phaser.Scene {
     }
 
     preload() {
-
-        this.load.setBaseURL(import.meta.env.BASE_URL);
+        // Змінна 'b' автоматично підставить '/' локально і '/Astronaut-Mission-Trainer/' на GitHub
+        const b = import.meta.env.BASE_URL; 
 
         if (!this.textures.exists('mainBaseTexture')) {
-            this.load.image('mainBaseTexture', 'assets/sprites/mainModuleBase.png');
+            this.load.image('mainBaseTexture', b + 'assets/sprites/mainModuleBase.png');
         }
         if (!this.textures.exists('greenhouseExtTexture')) {
-            this.load.image('greenhouseExtTexture', 'assets/sprites/greenhouse_ext.png');
+            this.load.image('greenhouseExtTexture', b + 'assets/sprites/greenhouse_ext.png');
         }
         
         if (!this.textures.exists('solar_clean')) {
-            this.load.image('solar_clean', 'assets/sprites/solar_clean.png');
-            this.load.image('solar_dirty', 'assets/sprites/solar_dirty.png');
+            this.load.image('solar_clean', b + 'assets/sprites/solar_clean.png');
+            this.load.image('solar_dirty', b + 'assets/sprites/solar_dirty.png');
         }
         
         if (!this.textures.exists('astro_1_stand')) {
             for (let i = 1; i <= 4; i++) {
-                this.load.image(`astro_${i}_stand`, `assets/sprites/astro_${i}_stand.png`);
-                this.load.image(`astro_${i}_walk1`, `assets/sprites/astro_${i}_walk1.png`);
-                this.load.image(`astro_${i}_walk2`, `assets/sprites/astro_${i}_walk2.png`);
+                this.load.image(`astro_${i}_stand`, b + `assets/sprites/astro_${i}_stand.png`);
+                this.load.image(`astro_${i}_walk1`, b + `assets/sprites/astro_${i}_walk1.png`);
+                this.load.image(`astro_${i}_walk2`, b + `assets/sprites/astro_${i}_walk2.png`);
             }
-        }
-        if (!this.textures.exists('mapTexture')) {
-            this.load.image('mapTexture', 'assets/sprites/background.png');
         }
     }
 
@@ -59,8 +57,8 @@ export default class MainBase extends Phaser.Scene {
         // ВИПРАВЛЕНО: +5 замість +6, тепер квадрат рівно на нижньому краю текстури
         const greenhouseDoor = { x: greenhouse.x + 1, y: greenhouse.y + 5 }; 
 
-        const depot = { x: 48, y: 61 };
         const shelter = { x: 45, y: 75, size: 4 };
+        const shelterDoor = { x: shelter.x + 1, y: shelter.y + shelter.size - 1 };
 
         const solarPanelsConfig = [
             { x: 41, y: 54 },
@@ -81,6 +79,7 @@ export default class MainBase extends Phaser.Scene {
                 if (inRect(x, y, baseX, baseY, 7, 7)) isWalkable = 1;     
                 if (inRect(x, y, lab.x, lab.y, 6, 6)) isWalkable = 1;      
                 if (inRect(x, y, greenhouse.x, greenhouse.y, 3, 6)) isWalkable = 1; 
+                if (inRect(x, y, shelter.x, shelter.y, shelter.size, shelter.size)) isWalkable = 1; // укриття — будівля
                 
                 solarPanelsConfig.forEach(pos => {
                     if (inRect(x, y, pos.x, pos.y, 2, 3)) isWalkable = 1; 
@@ -92,6 +91,8 @@ export default class MainBase extends Phaser.Scene {
             }
             grid.push(row);
         }
+
+        carveLandingPad(grid); // посадковий майданчик — прохідний, астронавти ходять по ньому
 
         this.grid = grid;
         this.finder.setGrid(grid);
@@ -143,7 +144,7 @@ export default class MainBase extends Phaser.Scene {
         }
 
         this.add.rectangle(lab.x * ts, lab.y * ts, 6 * ts, 6 * ts, 0x1e3a8a).setOrigin(0, 0).setDepth(1);
-        this.add.text((lab.x + 3) * ts, (lab.y - 1) * ts, 'H2O / O2 LAB', { fontSize: '10px', fill: '#3b82f6', fontFamily: '"Press Start 2P", monospace' }).setOrigin(0.5).setDepth(2);
+        this.add.text((lab.x + 3) * ts, (lab.y - 1) * ts, 'WATER & AIR LAB', { fontSize: '10px', fill: '#3b82f6', fontFamily: '"Press Start 2P", monospace' }).setOrigin(0.5).setDepth(2);
 
         if (this.textures.exists('greenhouseExtTexture')) {
             this.add.image(greenhouse.x * ts, greenhouse.y * ts, 'greenhouseExtTexture')
@@ -151,13 +152,17 @@ export default class MainBase extends Phaser.Scene {
         } else {
              this.add.rectangle(greenhouse.x * ts, greenhouse.y * ts, 3 * ts, 6 * ts, 0x166534).setOrigin(0, 0).setDepth(1);
         }
-        this.add.text((greenhouse.x + 1.5) * ts, (greenhouse.y - 1) * ts, 'ТЕПЛИЦЯ', { fontSize: '10px', fill: '#22c55e', fontFamily: '"Press Start 2P", monospace' }).setOrigin(0.5).setDepth(2);
+        this.add.text((greenhouse.x + 1.5) * ts, (greenhouse.y - 1) * ts, 'GREENHOUSE', { fontSize: '10px', fill: '#22c55e', fontFamily: '"Press Start 2P", monospace' }).setOrigin(0.5).setDepth(2);
 
-        const shelterX = shelter.x * ts, shelterY = shelter.y * ts, shelterPx = shelter.size * ts;
-        this.shelterRect = { x: shelterX, y: shelterY, w: shelterPx, h: shelterPx };
-        this.shelterZone = this.add.rectangle(shelterX, shelterY, shelterPx, shelterPx, 0x10b981, 0.3).setOrigin(0, 0);
-        this.add.text(shelterX + 8, shelterY + 8, 'УКРИТТЯ', { fontSize: '8px', fill: '#10b981', fontFamily: '"Press Start 2P", monospace' });
-        this.shelterState = {};
+        // Укриття — окрема будівля (вхід у сцену 'Shelter')
+        const shelterPx = shelter.size * ts;
+        this.add.rectangle(shelter.x * ts, shelter.y * ts, shelterPx, shelterPx, 0x065f46).setOrigin(0, 0).setDepth(1);
+        this.add.rectangle(shelter.x * ts + 6, shelter.y * ts + 6, shelterPx - 12, shelterPx - 12, 0x047857).setOrigin(0, 0).setDepth(1);
+        this.add.rectangle(shelterDoor.x * ts, shelterDoor.y * ts, ts, ts, 0x022c22).setOrigin(0, 0).setDepth(1.5);
+        this.add.text((shelter.x + shelter.size / 2) * ts, (shelter.y - 0.6) * ts, 'SHELTER', {
+            fontSize: '10px', fill: '#10b981', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(2);
+        this.workTasks = new Map();
 
         this.normalSpeed = 200;
         this.speed = this.normalSpeed;
@@ -198,6 +203,8 @@ export default class MainBase extends Phaser.Scene {
         this.physics.add.collider(this.crewGroup, this.crewGroup);
         this.getActiveAstro = () => this.astronauts.find(a => a.id === this.activeAstroId);
 
+        createLandingPad(this); // посадковий майданчик + посилка (якщо вже прилетіла)
+
         this.cameras.main.setBounds(0, 0, mapWidthPx, mapHeightPx);
         const activeSprite = this.getActiveAstro();
         if (activeSprite) this.cameras.main.startFollow(activeSprite, true, 0.1, 0.1);
@@ -219,6 +226,7 @@ export default class MainBase extends Phaser.Scene {
         this.addDoor(doorGridX, doorGridY, 0x00ff00, 'LandingModule', { x: 50 * ts, y: 54 * ts });
         this.addDoor(labDoor.x, labDoor.y, 0x3b82f6, 'WaterProcessingBuilding', { x: 49 * ts, y: 54 * ts });
         this.addDoor(greenhouseDoor.x, greenhouseDoor.y, 0x22c55e, 'Greenhouse', { x: 49 * ts, y: 52 * ts }); // Спавн перед дверима всередині
+        this.addDoor(shelterDoor.x, shelterDoor.y, 0x10b981, 'Shelter', { x: 49 * ts, y: 54 * ts });
         
         this.solarPanels = [];
         
@@ -239,23 +247,30 @@ export default class MainBase extends Phaser.Scene {
             
             clickZone.on('pointerdown', (pointer, localX, localY, event) => {
                 event.stopPropagation();
-                if (!panelObj.isDirty) return; 
+                if (!panelObj.isDirty || panelObj.cleaning) return; 
 
+                const astroId = this.activeAstroId;
                 const spot = this.getBestInteractionSpot(pos.x, pos.y + 3);
                 if (!spot) return;
                 
                 this.walkTo(spot.x * ts, spot.y * ts, () => {
-                    panelObj.isDirty = false;
-                    if (this.textures.exists('solar_clean')) {
-                        panelObj.image.setTexture('solar_clean').setDisplaySize(2 * ts, 3 * ts);
-                    } else {
-                        panelObj.image.setFillStyle(SOLAR_CLEAN_COLOR);
-                    }
-                    
-                    const allClean = this.solarPanels.every(p => !p.isDirty);
-                    if (allClean) {
-                        window.dispatchEvent(new CustomEvent('CLEAN_SOLAR_PANEL'));
-                    }
+                    if (!panelObj.isDirty || panelObj.cleaning) return;
+                    panelObj.cleaning = true;
+                    // Чистка забирає час: прогрес-бар над астронавтом, будь-який рух її перериває
+                    startWork(this, astroId, WORK_DURATION.cleanPanel, () => {
+                        panelObj.cleaning = false;
+                        panelObj.isDirty = false;
+                        if (this.textures.exists('solar_clean')) {
+                            panelObj.image.setTexture('solar_clean').setDisplaySize(2 * ts, 3 * ts);
+                        } else {
+                            panelObj.image.setFillStyle(SOLAR_CLEAN_COLOR);
+                        }
+
+                        const allClean = this.solarPanels.every(p => !p.isDirty);
+                        if (allClean) {
+                            window.dispatchEvent(new CustomEvent('CLEAN_SOLAR_PANEL'));
+                        }
+                    }, () => { panelObj.cleaning = false; });
                 });
             });
         });
@@ -302,20 +317,6 @@ export default class MainBase extends Phaser.Scene {
             loop: true
         });
 
-        this.resourceDepot = this.add.rectangle(depot.x * ts, depot.y * ts, ts, ts, 0xd97706).setOrigin(0, 0).setDepth(1);
-        this.resourceDepot.setInteractive();
-        this.add.text(depot.x * ts + 16, (depot.y - 1) * ts, 'СКЛАД РЕСУРСІВ', {
-            fontSize: '8px', fill: '#f59e0b', fontFamily: '"Press Start 2P", monospace'
-        }).setOrigin(0.5).setDepth(2);
-
-        this.resourceDepot.on('pointerdown', (pointer, localX, localY, event) => {
-            event.stopPropagation();
-            const astroId = this.activeAstroId;
-            const spot = this.getBestInteractionSpot(depot.x, depot.y);
-            if (!spot) return;
-            this.walkTo(spot.x * ts, spot.y * ts, () => deliverRegolith(this, astroId));
-        });
-
         const handleSwitchAstro = (e) => {
             const targetId = e.detail;
             this.saveCrewState();
@@ -335,8 +336,6 @@ export default class MainBase extends Phaser.Scene {
 
         window.addEventListener('SWITCH_ASTRO', handleSwitchAstro);
         window.addEventListener('SET_TIME', handleSetTime);
-
-        this.time.addEvent({ delay: 250, callback: this.checkShelter, callbackScope: this, loop: true });
 
         this.events.on('shutdown', () => {
             window.removeEventListener('DIRTY_SOLAR_PANEL', makeAllPanelsDirty);
@@ -361,6 +360,7 @@ export default class MainBase extends Phaser.Scene {
             if (!spot) return;
             this.walkTo(spot.x * ts, spot.y * ts, () => {
                 if (astroId !== this.activeAstroId) return; 
+                if (!canEnterWithParcel(this, astroId, targetScene)) return; // доставка посилки у LandingModule
                 this.saveCrewState();
 
                 const state = this.registry.get('crewState');
@@ -375,19 +375,6 @@ export default class MainBase extends Phaser.Scene {
             });
         });
         return door;
-    }
-
-    checkShelter() {
-        const s = this.shelterRect;
-        this.astronauts.forEach(a => {
-            const cx = a.x + 16;
-            const cy = a.y + 16;
-            const inside = cx >= s.x && cx <= s.x + s.w && cy >= s.y && cy <= s.y + s.h;
-            if (this.shelterState[a.id] !== inside) {
-                this.shelterState[a.id] = inside;
-                window.dispatchEvent(new CustomEvent('ASTRO_SHELTER', { detail: { id: a.id, inShelter: inside } }));
-            }
-        });
     }
 
     spawnRegolithNode() {
@@ -406,19 +393,32 @@ export default class MainBase extends Phaser.Scene {
                 event.stopPropagation();
                 const astroId = this.activeAstroId;
                 this.walkTo(regolith.x, regolith.y, () => {
-                    if (!regolith.active) return; 
-                    const crewState = this.registry.get('crewState') || [];
-                    const astroData = crewState.find(s => s.id === astroId);
-                    if (!astroData) return;
-
-                    const currentInv = astroData.inventory || 0;
-                    if (currentInv < 100) {
-                        astroData.inventory = currentInv + 1;
-                        this.registry.set('crewState', crewState);
-                        regolith.destroy();
-                        this.regolithNodes = this.regolithNodes.filter(n => n !== regolith);
-                        window.dispatchEvent(new CustomEvent('UPDATE_INVENTORY', { detail: astroData }));
+                    if (!regolith.active || regolith.collecting) return; 
+                    const startState = this.registry.get('crewState') || [];
+                    const startData = startState.find(s => s.id === astroId);
+                    if (!startData) return;
+                    if ((startData.inventory || 0) >= 100) {
+                        window.dispatchEvent(new CustomEvent('GAME_LOG', { detail: { message: 'Your bag is full — hand in the moon dust at the STORAGE in the LANDING MODULE.' } }));
+                        return;
                     }
+
+                    // Збір ґрунту забирає час: прогрес-бар над астронавтом
+                    regolith.collecting = true;
+                    startWork(this, astroId, WORK_DURATION.collectRegolith, () => {
+                        if (!regolith.active) return; 
+                        const crewState = this.registry.get('crewState') || [];
+                        const astroData = crewState.find(s => s.id === astroId);
+                        if (!astroData) return;
+
+                        const currentInv = astroData.inventory || 0;
+                        if (currentInv < 100) {
+                            astroData.inventory = currentInv + 1;
+                            this.registry.set('crewState', crewState);
+                            regolith.destroy();
+                            this.regolithNodes = this.regolithNodes.filter(n => n !== regolith);
+                            window.dispatchEvent(new CustomEvent('UPDATE_INVENTORY', { detail: astroData }));
+                        }
+                    }, () => { regolith.collecting = false; });
                 });
             });
             this.regolithNodes.push(regolith);
@@ -451,6 +451,7 @@ export default class MainBase extends Phaser.Scene {
     }
 
     walkTo(targetPixelX, targetPixelY, onArrivalAction = null) {
+        cancelWork(this, this.activeAstroId); // нова команда руху перериває роботу
         const dead = (window.gameSim && window.gameSim.deadIds) || [];
         if (dead.includes(this.activeAstroId)) return;
 
@@ -496,7 +497,7 @@ export default class MainBase extends Phaser.Scene {
         this.finder.calculate();
     }
 
-    update() {
+    update(time, delta) {
         const sim = window.gameSim || {};
         const dead = sim.deadIds || [];
         const eventSlowdown = sim.speedMultiplier !== undefined ? sim.speedMultiplier : 1;
@@ -507,8 +508,11 @@ export default class MainBase extends Phaser.Scene {
                 astro.isMoving = false;
                 astro.updateMovement(0, 0);
             } else {
-                astro.updateMovement(this.speed * eventSlowdown, this.timeScale);
+                astro.updateMovement(this.speed * eventSlowdown * getCarrySlowdown(this, astro.id), this.timeScale);
             }
         });
+
+        updateLandingPad(this);
+        updateWork(this, delta);
     }
 }

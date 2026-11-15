@@ -4,6 +4,7 @@ import MainBase from './scenes/MainBase';
 import LandingModule from './scenes/LandingModule';
 import WaterProcessingBuilding from './scenes/WaterProcessingBuilding';
 import GreenhouseBuilding from './scenes/GreenhouseBuilding';
+import ShelterBuilding from './scenes/ShelterBuilding';
 
 const config = {
     type: Phaser.AUTO,
@@ -18,8 +19,8 @@ const config = {
         arcade: { debug: false }
     },
     audio: { noAudio: true },
-    pixelArt: true, // ВАЖЛИВО: Робить графіку чіткою (піксельною)
-    scene: [MainBase, MainMenu, LandingModule, WaterProcessingBuilding, GreenhouseBuilding]
+    pixelArt: true, 
+    scene: [MainMenu, MainBase, LandingModule, WaterProcessingBuilding, GreenhouseBuilding, ShelterBuilding]
 };
 
 export default config;
