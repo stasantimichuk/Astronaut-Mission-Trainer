@@ -5,26 +5,23 @@
 
 export const EVENT_CONFIG = {
     CME: {
-        label: 'CME',
+        label: 'SOLAR BLAST',
         durationTicks: 6,          // ~30 с реального часу при x1
         speedMultiplier: 0.5,      // сповільнення руху на поверхні на 50%
         suitDamagePerTick: 8,      // втрата скафандра за тік (на поверхні, поза укриттям)
         suitThresholdPercent: 50,  // нижче цього порогу скафандр уже не захищає — починається втрата HP
         healthDamageFactor: 4,
         dustsSolarPanels: true,    // сонячні панелі засипає пилом -> генерація енергії = 0
-        startMessage: '⚠️ КОРОНАЛЬНИЙ ВИКИД! Панелі засипані пилом, енергії немає. Скафандри псуються — в укриття!'
+        startMessage: '⚠️ SOLAR BLAST! Dust covers the solar panels, so there is no power. Space suits are getting damaged — go inside!'
     },
     SEP: {
-        label: 'SEP',
+        label: 'RADIATION STORM',
         durationTicks: 6,
         damageIntervalTicks: 3,    // кожен 3-й тік
         healthLoss: 10,
-        startMessage: '☢️ ПРОТОННА БУРЯ! Радіація на поверхні — сховайтесь у будівлі або укриття!'
+        startMessage: '☢️ RADIATION STORM! It is dangerous everywhere — only the SHELTER keeps you safe. Everyone to the shelter!'
     },
-    RANDOM: {
-        enabled: false,            // true — івенти починатимуться самі
-        chancePerTick: 1 / 60
-    }
+    // Івенти запускає розклад з ForecastSchedule.js (прогноз космічної погоди)
 };
 
 export class SpaceEventsManager {
@@ -33,11 +30,6 @@ export class SpaceEventsManager {
         this.ticksLeft = 0;
         this.sepCounter = 0;
         this.sepStrike = false;
-    }
-
-    pickRandom() {
-        const types = ['CME', 'SEP'];
-        return types[Math.floor(Math.random() * types.length)];
     }
 
     start(type) {
@@ -72,10 +64,15 @@ export class SpaceEventsManager {
                 hp -= Math.max(1, Math.round(c.healthDamageFactor * factor));
             }
         }
+        return { hp: this.applyRadiation(hp), suit };
+    }
+
+    // SEP б'є по всіх, хто НЕ в укритті (і на поверхні, і в звичайних будівлях)
+    applyRadiation(hp) {
         if (this.active === 'SEP' && this.sepStrike) {
             hp -= EVENT_CONFIG.SEP.healthLoss;
         }
-        return { hp: Math.max(0, hp), suit };
+        return Math.max(0, hp);
     }
 
     // Викликати в кінці тіка. Повертає тип івенту, якщо він щойно завершився.

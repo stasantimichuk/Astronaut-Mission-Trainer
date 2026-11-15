@@ -8,7 +8,7 @@ export default class WaterProcessingBuilding extends BuildingScene {
             bgColor: '#0a0a12',
             floorColor: 0x2563eb,
             wallColor: 0x1e293b,
-            title: 'H2O & O2 PROCESSING FACILITY',
+            title: 'WATER & AIR LAB',
             titleColor: '#3b82f6',
             returnTile: { x: 38, y: 71 }
         });
@@ -25,7 +25,7 @@ export default class WaterProcessingBuilding extends BuildingScene {
 
         this.processor = this.add.rectangle(px * ts, py * ts, ts, ts, 0x38bdf8).setOrigin(0, 0);
         this.processor.setInteractive();
-        this.add.text(px * ts, (py - 1) * ts, 'RECYCLER', {
+        this.add.text(px * ts, (py - 1) * ts, 'WATER & AIR MAKER', {
             fontSize: '8px', fill: '#38bdf8', fontFamily: '"Press Start 2P", monospace'
         });
 

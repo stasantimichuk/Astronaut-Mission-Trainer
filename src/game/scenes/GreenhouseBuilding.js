@@ -9,18 +9,17 @@ export default class GreenhouseBuilding extends Phaser.Scene {
     }
 
     preload() {
-
-        this.load.setBaseURL(import.meta.env.BASE_URL);
+        const b = import.meta.env.BASE_URL;
 
         if (!this.textures.exists('greenhouseIntTexture')) {
-            this.load.image('greenhouseIntTexture', 'assets/sprites/greenhouse_int.png');
+            this.load.image('greenhouseIntTexture', b + 'assets/sprites/greenhouse_int.png');
         }
-        // ВИПРАВЛЕНО: завантажуємо текстури астронавтів, щоб сцена не крашилась при оновленні
+        
         if (!this.textures.exists('astro_1_stand')) {
             for (let i = 1; i <= 4; i++) {
-                this.load.image(`astro_${i}_stand`, `assets/sprites/astro_${i}_stand.png`);
-                this.load.image(`astro_${i}_walk1`, `assets/sprites/astro_${i}_walk1.png`);
-                this.load.image(`astro_${i}_walk2`, `assets/sprites/astro_${i}_walk2.png`);
+                this.load.image(`astro_${i}_stand`, b + `assets/sprites/astro_${i}_stand.png`);
+                this.load.image(`astro_${i}_walk1`, b + `assets/sprites/astro_${i}_walk1.png`);
+                this.load.image(`astro_${i}_walk2`, b + `assets/sprites/astro_${i}_walk2.png`);
             }
         }
     }
@@ -120,7 +119,7 @@ export default class GreenhouseBuilding extends Phaser.Scene {
         }).setOrigin(0.5, 0.5);
 
         this.add.rectangle(centerX, (doorY + 1.5) * ts, 6 * ts, 15, 0x000000, 0.8).setOrigin(0.5, 0.5);
-        this.add.text(centerX, (doorY + 1.5) * ts, 'КЛІКНІТЬ НИЖЧЕ ДЛЯ ВИХОДУ', {
+        this.add.text(centerX, (doorY + 1.5) * ts, 'CLICK BELOW TO LEAVE', {
             fontSize: '7px', fill: '#4ade80', fontFamily: '"Press Start 2P", monospace'
         }).setOrigin(0.5, 0.5);
 
@@ -320,9 +319,9 @@ export default class GreenhouseBuilding extends Phaser.Scene {
         const gh = sim.greenhouse || { growth: 0, ready: 0, workProgress: 0, powered: true };
         const workers = (sim.workingIds || []).length;
         const lines = [
-            gh.powered ? `РІСТ: ${Math.round(gh.growth)}%` : 'НЕМАЄ ЕНЕРГІЇ АБО ВОДИ!',
-            `УРОЖАЙ ГОТОВИЙ: ${gh.ready}`,
-            `ПРАЦЮЮТЬ: ${workers}  ЗБІР: ${Math.round(gh.workProgress)}%`
+            gh.powered ? `GROWING: ${Math.round(gh.growth)}%` : 'NO POWER OR WATER!',
+            `READY TO PICK: ${gh.ready}`,
+            `WORKERS: ${workers}  PICKING: ${Math.round(gh.workProgress)}%`
         ];
         if (this.statusText) {
             this.statusText.setText(lines.join('\n'));

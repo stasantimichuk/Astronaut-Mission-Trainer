@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import EasyStar from 'easystarjs';
 import Astronaut from '../entities/Astronaut';
+import { deliverRegolith } from '../utils/deliverRegolith';
 
 export default class LandingModule extends Phaser.Scene {
     constructor() {
@@ -24,6 +25,14 @@ export default class LandingModule extends Phaser.Scene {
         // Вихід тепер рівно по центру (x: 50) на нижній межі кола (y: 55)
         const exitGridX = cx;
         const exitGridY = cy + radius; 
+
+        // Пункт зв'язку (замовлення посилок) — біля північної стіни, по центру
+        const commGridX = cx;
+        const commGridY = cy - radius;
+
+        // Склад ресурсів (перенесено з поверхні): сюди здають зібраний ґрунт
+        const depotGridX = cx - 4;
+        const depotGridY = cy - 2;
 
         const mapWidthPx = mapWidthTiles * this.tileSize;
         const mapHeightPx = mapHeightTiles * this.tileSize;
@@ -59,6 +68,9 @@ export default class LandingModule extends Phaser.Scene {
                 
                 // Двері - це перешкода, щоб ми зупинялися ПЕРЕД ними
                 if (x === exitGridX && y === exitGridY) isWalkable = 1;
+                // Пункт зв'язку — перешкода, підходимо до нього впритул
+                if (x === commGridX && y === commGridY) isWalkable = 1;
+                if (x === depotGridX && y === depotGridY) isWalkable = 1;
                 
                 row.push(isWalkable);
             }
@@ -117,6 +129,42 @@ export default class LandingModule extends Phaser.Scene {
             });
             this.registry.set('crewState', state);
         };
+
+        // 📡 Пункт зв'язку: тут замовляють посилки з матеріалами (UI — CommTerminal.jsx в Interface)
+        const ts = this.tileSize;
+        this.add.rectangle(commGridX * ts, commGridY * ts, ts, ts, 0x0ea5e9).setOrigin(0, 0).setDepth(1);
+        this.add.rectangle(commGridX * ts + 6, commGridY * ts + 6, ts - 12, 10, 0x082f49).setOrigin(0, 0).setDepth(2);
+        this.add.text(commGridX * ts + 16, (commGridY - 0.6) * ts, 'COMMS', {
+            fontSize: '8px', fill: '#38bdf8', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(2);
+        this.commTerminal = this.add.rectangle(commGridX * ts, commGridY * ts, ts, ts, 0x000000, 0).setOrigin(0, 0).setDepth(3);
+        this.commTerminal.setInteractive({ useHandCursor: true });
+        this.commTerminal.on('pointerdown', (pointer, localX, localY, event) => {
+            event.stopPropagation();
+            const spot = this.getBestInteractionSpot(commGridX, commGridY);
+            if (!spot) return;
+            this.walkTo(spot.x * ts, spot.y * ts, () => {
+                if (window.gameSim && window.gameSim.powered === false) {
+                    window.dispatchEvent(new CustomEvent('GAME_LOG', { detail: { message: '⚡ No power — comms are off! Clean the solar panels.' } }));
+                    return;
+                }
+                window.dispatchEvent(new CustomEvent('OPEN_COMM_TERMINAL'));
+            });
+        });
+
+        // 📦 Склад ресурсів: здача ґрунту (переробка на воду й кисень потребує електрики)
+        this.resourceDepot = this.add.rectangle(depotGridX * ts, depotGridY * ts, ts, ts, 0xd97706).setOrigin(0, 0).setDepth(1);
+        this.add.text(depotGridX * ts + 16, (depotGridY - 0.6) * ts, 'STORAGE', {
+            fontSize: '8px', fill: '#f59e0b', fontFamily: '"Press Start 2P", monospace'
+        }).setOrigin(0.5).setDepth(2);
+        this.resourceDepot.setInteractive({ useHandCursor: true });
+        this.resourceDepot.on('pointerdown', (pointer, localX, localY, event) => {
+            event.stopPropagation();
+            const astroId = this.activeAstroId;
+            const spot = this.getBestInteractionSpot(depotGridX, depotGridY);
+            if (!spot) return;
+            this.walkTo(spot.x * ts, spot.y * ts, () => deliverRegolith(this, astroId));
+        });
 
         // 🚪 Двері виходу на базу
         this.exitDoor = this.add.rectangle(exitGridX * this.tileSize, exitGridY * this.tileSize, 32, 32, 0x10b981).setOrigin(0, 0);

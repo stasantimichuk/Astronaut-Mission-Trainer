@@ -42,7 +42,7 @@ export default function CrewPanel({ crew, onSelectAstro }) {
                         {/* Ліва колонка */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#94a3b8' }}>HP:</span>
+                                <span style={{ color: '#94a3b8' }}>HEALTH:</span>
                                 <span style={{ color: astro.hp < 30 ? '#ef4444' : '#10b981' }}>{astro.hp}%</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -58,15 +58,15 @@ export default function CrewPanel({ crew, onSelectAstro }) {
                         {/* Права колонка */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#94a3b8' }}>O2:</span>
+                                <span style={{ color: '#94a3b8' }}>AIR:</span>
                                 <span style={{ color: astro.oxygen < 30 ? '#ef4444' : '#0ea5e9' }}>{astro.oxygen}%</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#94a3b8' }}>H2O:</span>
+                                <span style={{ color: '#94a3b8' }}>WATER:</span>
                                 <span style={{ color: astro.water < 30 ? '#ef4444' : '#3b82f6' }}>{astro.water}%</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ color: '#94a3b8' }}>ENG:</span>
+                                <span style={{ color: '#94a3b8' }}>POWER:</span>
                                 <span style={{ color: astro.energy < 30 ? '#ef4444' : '#eab308' }}>{astro.energy}%</span>
                             </div>
                         </div>
@@ -81,8 +81,8 @@ export default function CrewPanel({ crew, onSelectAstro }) {
                         display: 'flex', 
                         justifyContent: 'space-between' 
                     }}>
-                        <span style={{ color: '#94a3b8' }}>INV:</span>
-                        <span style={{ color: '#a855f7' }}>{astro.inventory} ITEM</span>
+                        <span style={{ color: '#94a3b8' }}>BAG:</span>
+                        <span style={{ color: '#a855f7' }}>{astro.inventory} dust</span>
                     </div>
                 </div>
             ))}
