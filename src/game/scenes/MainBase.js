@@ -13,6 +13,9 @@ export default class MainBase extends Phaser.Scene {
     }
 
     preload() {
+
+        this.load.setBaseURL(import.meta.env.BASE_URL);
+
         if (!this.textures.exists('mainBaseTexture')) {
             this.load.image('mainBaseTexture', 'assets/sprites/mainModuleBase.png');
         }
