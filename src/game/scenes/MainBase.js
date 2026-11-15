@@ -14,26 +14,26 @@ export default class MainBase extends Phaser.Scene {
 
     preload() {
         if (!this.textures.exists('mainBaseTexture')) {
-            this.load.image('mainBaseTexture', '/assets/sprites/mainModuleBase.png');
+            this.load.image('mainBaseTexture', 'assets/sprites/mainModuleBase.png');
         }
         if (!this.textures.exists('greenhouseExtTexture')) {
-            this.load.image('greenhouseExtTexture', '/assets/sprites/greenhouse_ext.png');
+            this.load.image('greenhouseExtTexture', 'assets/sprites/greenhouse_ext.png');
         }
         
         if (!this.textures.exists('solar_clean')) {
-            this.load.image('solar_clean', '/assets/sprites/solar_clean.png');
-            this.load.image('solar_dirty', '/assets/sprites/solar_dirty.png');
+            this.load.image('solar_clean', 'assets/sprites/solar_clean.png');
+            this.load.image('solar_dirty', 'assets/sprites/solar_dirty.png');
         }
         
         if (!this.textures.exists('astro_1_stand')) {
             for (let i = 1; i <= 4; i++) {
-                this.load.image(`astro_${i}_stand`, `/assets/sprites/astro_${i}_stand.png`);
-                this.load.image(`astro_${i}_walk1`, `/assets/sprites/astro_${i}_walk1.png`);
-                this.load.image(`astro_${i}_walk2`, `/assets/sprites/astro_${i}_walk2.png`);
+                this.load.image(`astro_${i}_stand`, `assets/sprites/astro_${i}_stand.png`);
+                this.load.image(`astro_${i}_walk1`, `assets/sprites/astro_${i}_walk1.png`);
+                this.load.image(`astro_${i}_walk2`, `assets/sprites/astro_${i}_walk2.png`);
             }
         }
         if (!this.textures.exists('mapTexture')) {
-            this.load.image('mapTexture', '/assets/sprites/background.png');
+            this.load.image('mapTexture', 'assets/sprites/background.png');
         }
     }
 
